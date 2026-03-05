@@ -11,7 +11,6 @@ import (
 	"github.com/rzkhosroshahi/lab/go/simple-project/internals/api"
 	"github.com/rzkhosroshahi/lab/go/simple-project/internals/config"
 	"github.com/rzkhosroshahi/lab/go/simple-project/internals/store"
-	"github.com/rzkhosroshahi/lab/go/simple-project/migrations"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -33,9 +32,8 @@ func NewApplication() (*Application, error) {
 		return nil, err
 	}
 
-	err = store.MigrateFS(sqlDB, migrations.FS, ".")
-	if err != nil {
-		return nil, fmt.Errorf("migrations: %w", err)
+	if err := autoMigrate(gormDB); err != nil {
+		return nil, fmt.Errorf("auto migrate: %w", err)
 	}
 
 	// our store will go here
@@ -89,3 +87,8 @@ func openGormDB(cfg config.DBConfig, l *log.Logger) (*gorm.DB, *sql.DB, error) {
 
 	return gormDB, sqlDB, nil
 }
+
+func autoMigrate(db *gorm.DB) error {
+	return db.AutoMigrate(&store.Workout{}, &store.WorkoutEntry{})
+}
+
