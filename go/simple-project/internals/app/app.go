@@ -6,10 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/rzkhosroshahi/lab/go/simple-project/internals/api"
+	"github.com/rzkhosroshahi/lab/go/simple-project/internals/config"
 	"github.com/rzkhosroshahi/lab/go/simple-project/internals/store"
 	"github.com/rzkhosroshahi/lab/go/simple-project/migrations"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Application struct {
@@ -19,26 +24,29 @@ type Application struct {
 }
 
 func NewApplication() (*Application, error) {
-	pgDB, err := store.Open()
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	dbCfg := config.LoadDBConfig()
+
+	gormDB, sqlDB, err := openGormDB(dbCfg, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	err = store.MigrateFS(pgDB, migrations.FS, ".")
+	err = store.MigrateFS(sqlDB, migrations.FS, ".")
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("migrations: %w", err)
 	}
 
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	// our store will go here
-	workoutStore := store.NewPostgresWorkoutStore(pgDB)
+	workoutStore := store.NewPostgresWorkoutStore(gormDB)
 	// our handlers will go here
 	workoutHandler := api.NewWorkoutHandler(workoutStore, logger)
 
 	app := &Application{
 		Logger:         logger,
 		WorkoutHandler: workoutHandler,
-		DB:             pgDB,
+		DB:             sqlDB,
 	}
 
 	return app, nil
@@ -46,4 +54,38 @@ func NewApplication() (*Application, error) {
 
 func (a *Application) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "status is available\n")
+}
+
+func openGormDB(cfg config.DBConfig, l *log.Logger) (*gorm.DB, *sql.DB, error) {
+	gormDB, err := gorm.Open(
+		postgres.Open(cfg.DSN()),
+		&gorm.Config{
+			Logger: logger.New(
+				log.New(os.Stdout, "gorm: ", log.LstdFlags),
+				logger.Config{
+					SlowThreshold:             time.Second,
+					LogLevel:                  logger.Info,
+					IgnoreRecordNotFoundError: true,
+					Colorful:                  true,
+				},
+			),
+		},
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open gorm db: %w", err)
+	}
+
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		return nil, nil, fmt.Errorf("underlying sql db: %w", err)
+	}
+
+	// Basic connection pool settings; adjust as needed.
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	l.Println("Connected to Database via GORM...")
+
+	return gormDB, sqlDB, nil
 }
