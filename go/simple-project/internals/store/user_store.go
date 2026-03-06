@@ -76,26 +76,29 @@ func (pg *PostgresUserStore) CreateUser(user *User) error {
 	return nil
 }
 
-func (pg *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
+func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 	user := &User{
 		PasswordHash: password{},
 	}
+
 	query := `
-		SELECT username, email, password_hash, bio, createdAt, updatedAt)
-		FROM USERS
+		SELECT id, username, email, password_hash, bio, created_at, updated_at
+		FROM users
 		WHERE username = $1
-	`
-	err := pg.db.QueryRow(query, username).Scan(
+  	`
+	err := s.db.QueryRow(query, username).Scan(
 		&user.ID,
 		&user.Username,
-		&user.PasswordHash.hash,
 		&user.Email,
+		&user.PasswordHash.hash,
+		&user.Bio,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
