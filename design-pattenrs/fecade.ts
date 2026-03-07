@@ -107,11 +107,7 @@ class ShippingService {
     }
 }
 class NotificationService {
-    private ShippingService: ShippingService;
-    
-    constructor() {
-        this.ShippingService = new ShippingService();
-    }
+    constructor(private shippingService: ShippingService) {}
     notify(message: string) {
         alert(message);
     }
@@ -122,7 +118,7 @@ class NotificationService {
     notifyShippingService(trackingNumber: number) {
         this.notify(`
             The shipment company received your order. here its your tracking number: ${trackingNumber}.
-            Your order state is: ${this.ShippingService.getItemState(trackingNumber)}
+            Your order state is: ${this.shippingService.getItemState(trackingNumber)}
         `); 
         
     }
@@ -137,7 +133,7 @@ class OrderFacade {
         this.InventoryService = new InventoryService();
         this.PaymentService = new PaymentService();
         this.ShippingService = new ShippingService();
-        this.NotificationService = new NotificationService();
+        this.NotificationService = new NotificationService(this.ShippingService);
     }
     placeOrder(productId: string, quantity: number, paymentInfo: { paymentMethod: string, price: number }) {
         try {
