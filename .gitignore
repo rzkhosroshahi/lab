@@ -1,3 +1,6 @@
+.DS_STORE
 .qodo
+.vscode
 database
 ./database
+node_modules
