@@ -1,0 +1,39 @@
+{
+  "name": "design-pattenrs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "ts": "babel-node --extensions .ts,.tsx"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/node": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
+    "@types/node": "^25.3.5",
+    "typescript": "^5.9.3"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ],
+      [
+        "@babel/preset-typescript",
+        {
+          "allowDeclareFields": true
+        }
+      ]
+    ]
+  }
+}
