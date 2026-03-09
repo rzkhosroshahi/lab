@@ -2,7 +2,6 @@ package store
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -10,31 +9,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupTestingDB(t *testing.T) *sql.DB {
+func setupTestDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("pgx", "host=localhost user=postgres password=postgres dbname=postgres port=5433 sslmode=disable")
 	if err != nil {
-		t.Fatal("open test database error %w", err)
+		t.Fatalf("opening test db: %v", err)
 	}
 
-	// run migrations for our db
-	err = Migrate(db, "../../migrations")
+	// run the migratoins for our test db
+	err = Migrate(db, "../../migrations/")
 	if err != nil {
-		t.Fatal("migration test database error %w", err)
+		t.Fatalf("migrating test db error: %v", err)
 	}
 
-	_, err = db.Exec("TRUNCATE workouts, workout_entries CASCADE")
+	_, err = db.Exec(`TRUNCATE users, workouts, workout_entries CASCADE`)
 	if err != nil {
-		t.Fatal("TRUNCATE test database error %w", err)
+		t.Fatalf("truncating tables %v", err)
 	}
-	fmt.Println("Connected to Database...")
+
 	return db
 }
 
 func TestCreateWorkout(t *testing.T) {
-	db := setupTestingDB(t)
+	db := setupTestDB(t)
 	defer db.Close()
 
 	store := NewPostgresWorkoutStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	testUser := &User{
+		Username: "melkey",
+		Email:    "melkey@example.com",
+	}
+
+	err := testUser.PasswordHash.Set("securepassword")
+	require.NoError(t, err)
+
+	err = userStore.CreateUser(testUser)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name    string
@@ -42,15 +53,16 @@ func TestCreateWorkout(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid CreateWorkout",
+			name: "valid workout",
 			workout: &Workout{
-				Title:           "Push Day",
-				Description:     "upper day body",
+				UserID:          testUser.ID,
+				Title:           "push day",
+				Description:     "upper body day",
 				DurationMinutes: 60,
 				CaloriesBurned:  200,
 				Entries: []WorkoutEntry{
 					{
-						ExerciseName: "bench press",
+						ExerciseName: "Bench press",
 						Sets:         3,
 						Reps:         IntPtr(10),
 						Weight:       FloatPtr(135.5),
@@ -61,8 +73,10 @@ func TestCreateWorkout(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{name: "workout with invalid entries",
+		{
+			name: "workout with invalid entries",
 			workout: &Workout{
+				UserID:          testUser.ID,
 				Title:           "full body",
 				Description:     "complete workout",
 				DurationMinutes: 90,
@@ -89,6 +103,7 @@ func TestCreateWorkout(t *testing.T) {
 			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			createdWorkout, err := store.CreateWorkout(tt.workout)
@@ -122,6 +137,6 @@ func IntPtr(i int) *int {
 	return &i
 }
 
-func FloatPtr(f float64) *float64 {
-	return &f
+func FloatPtr(i float64) *float64 {
+	return &i
 }

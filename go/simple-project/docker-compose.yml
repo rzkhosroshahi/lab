@@ -13,6 +13,23 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     restart: unless-stopped
+  # app:
+  #   container_name: "workout-api"
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     DB_HOST: db
+  #     DB_PORT: "5432"
+  #     DB_USER: "postgres"
+  #     DB_PASSWORD: "postgres"
+  #     DB_NAME: "postgres"
+  #     DB_SSLMODE: "disable"
+  #   ports:
+  #     - "8080:8080"
+  #   restart: unless-stopped
   test-db:
     container_name: "workoutDB_test"
     image: postgres:12.4-alpine

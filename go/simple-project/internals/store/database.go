@@ -7,10 +7,20 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/rzkhosroshahi/lab/go/simple-project/config"
 )
 
 func Open() (*sql.DB, error) {
-	db, err := sql.Open("pgx", "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable")
+	dbConnection := config.GetDBConnection()
+	host := dbConnection.Host
+	user := dbConnection.User
+	password := dbConnection.Password
+	name := dbConnection.Name
+	port := dbConnection.Port
+	sslMode := dbConnection.SslMode
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, name, port, sslMode)
+
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("db: open %w", err)
 	}
@@ -22,6 +32,7 @@ func Open() (*sql.DB, error) {
 	fmt.Println("Connected to Database...")
 	return db, nil
 }
+
 func MigrateFS(db *sql.DB, migrationsFS fs.FS, dir string) error {
 	goose.SetBaseFS(migrationsFS)
 	defer func() {

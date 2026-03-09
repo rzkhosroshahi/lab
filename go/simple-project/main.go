@@ -16,3 +16,5 @@ func main() {
 	r := routes.SetupRoutes(app)
 	http.SetupServer(app, r)
 }
+
+// goose -dir migrations postgres "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" up
