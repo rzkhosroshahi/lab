@@ -1,7 +1,7 @@
 import SessionManager from "./session-manager";
 import Logger, { LoggerHistoryManger, LogTypes } from "./logger";
-import type { ExportFormat } from "./export";
 import FilterLogs from './filter-logs';
+import { ExportFormat } from "./exporter";
 
 class DevLogApp {
     private logger: Logger;

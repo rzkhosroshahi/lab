@@ -1,8 +1,7 @@
 import type { Session } from "./session-manager";
 import SessionManager from "./session-manager";
 import { Nullable } from "./types";
-import Exporter, { ExportFormat } from "./export";
-import FilterLogs from './filter-logs';
+import Exporter, { ExportFormat } from "./exporter";
 
 export const LogEnum = {
     INFO: 'info',
