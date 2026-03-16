@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/rzkhosroshahi/lab/go/idiomatic-book/interfaces"
 	"github.com/rzkhosroshahi/lab/go/idiomatic-book/pointers"
+	"github.com/rzkhosroshahi/lab/go/idiomatic-book/types"
 )
 
 func main() {
-	interfaces.Run()
+	types.Run()
+	types.RunStruct()
 	pointers.Run()
 }
