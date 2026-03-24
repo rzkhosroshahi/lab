@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/rzkhosroshahi/lab/go/idiomatic-book/pointers"
-	"github.com/rzkhosroshahi/lab/go/idiomatic-book/types"
+	goroutine "github.com/rzkhosroshahi/lab/go/idiomatic-book/go-routine"
 )
 
 func main() {
-	types.Run()
-	types.RunStruct()
-	pointers.Run()
+	// types.Run()
+	// types.RunStruct()
+	// pointers.Run()
+	goroutine.CheckSites()
 }
